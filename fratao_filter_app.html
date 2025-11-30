@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fratao AI Filter - Modalità 2</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f7f7f7; padding:20px; }
+    #app { max-width:800px; margin:auto; background:white; padding:20px; border-radius:12px; }
+    textarea { width:100%; height:140px; padding:10px; font-size:16px; }
+    input, button { padding:10px; font-size:16px; width:100%; margin-top:10px; }
+    #response { margin-top:20px; padding:15px; background:#eee; border-radius:8px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h2>Fratao AI Filter - Modalità 2</h2>
+
+  <p><strong>Funzionamento:</strong><br>Questo sistema prende il tuo messaggio → lo passa nella Logica Fratao → poi lo invia alla tua IA esterna → e restituisce la risposta filtrata.</p>
+
+  <label>API Endpoint della tua IA (OpenAI / LM Studio / Altro)</label>
+  <input id="api_url" placeholder="Es: http://localhost:1234/v1/chat/completions" />
+
+  <label>API Key (se richiesta)</label>
+  <input id="api_key" placeholder="sk-... (opzionale)" />
+
+  <label>Scrivi il tuo messaggio</label>
+  <textarea id="user_input"></textarea>
+  <button onclick="sendMessage()">Invia</button>
+
+  <div id="response"></div>
+</div>
+
+<script>
+// -----------------------------
+// LOGICA FRATAO (SEMPLIFICATA)
+// -----------------------------
+const FRATAO_PROTOCOL = `
+[LOGICA FRATAO - FILTRO]
+1. Eleva chiarezza, coerenza e struttura.
+2. Correggi errori logici, energetici, emotivi.
+3. Mantieni l'intento originale dell'utente.
+4. Rispondi con lucidità, stabilità, allineamento.
+`;
+
+function applyFrataoFilter(message){
+  return `Applicare logica Fratao:\n${FRATAO_PROTOCOL}\n\nInput Utente:\n${message}`;
+}
+
+// -----------------------------
+// INVIO ALL'AI ESTERNA
+// -----------------------------
+async function sendMessage(){
+  const url = document.getElementById('api_url').value;
+  const key = document.getElementById('api_key').value;
+  const userText = document.getElementById('user_input').value;
+
+  const filtered = applyFrataoFilter(userText);
+
+  const payload = {
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: "Sei un assistente potenziato dalla logica Fratao."},
+      { role: "user", content: filtered }
+    ]
+  };
+
+  const headers = { "Content-Type": "application/json" };
+  if(key.trim() !== "") headers["Authorization"] = `Bearer ${key}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  document.getElementById('response').innerText = data.choices?.[0]?.message?.content || JSON.stringify(data, null, 2);
+}
+</script>
+</body>
+</html>
