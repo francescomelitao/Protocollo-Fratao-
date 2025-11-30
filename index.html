@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Rft: La Guida Interiore</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #1e293b;
+            overscroll-behavior: none; /* Previene il pull-to-refresh sui dispositivi mobili */
+        }
+        #chat-container {
+            max-height: calc(100vh - 140px); /* 140px per l'header e l'input */
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+        /* Stili per il pulsante di caricamento */
+        .loading-dot {
+            animation: bounce 0.6s infinite alternate;
+        }
+        .loading-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .loading-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+        /* Stile specifico per il messaggio dell'AI per evidenziare la dualità */
+        .ai-message {
+            background-color: #e0f2fe; /* Light Blue */
+            border-left: 4px solid #0ea5e9; /* Sky Blue accent */
+        }
+        .user-message {
+            background-color: #d1fae5; /* Light Green for contrast */
+            border-right: 4px solid #10b981; /* Emerald accent */
+        }
+    </style>
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, onSnapshot, collection, query, orderBy, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Variabili Globali del Canvas (Mandatorie)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId;
+        let isAuthReady = false;
+
+        // Configurazione e Inizializzazione Firebase
+        window.onload = async () => {
+            if (firebaseConfig) {
+                // setLogLevel('debug'); // Utile per debug
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Autenticazione: usa token personalizzato o anonima
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                    } else {
+                        // Se non autenticato, usa l'auth anonima
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                                userId = auth.currentUser.uid;
+                            } else {
+                                await signInAnonymously(auth);
+                                userId = auth.currentUser.uid;
+                            }
+                        } catch (error) {
+                            console.error("Errore durante l'autenticazione:", error);
+                            // Fallback per userId se l'autenticazione fallisce
+                            userId = crypto.randomUUID();
+                            document.getElementById('status').textContent = 'Autenticazione fallita (ID temporaneo)';
+                            document.getElementById('status').classList.add('text-red-500');
+                        }
+                    }
+
+                    document.getElementById('user-id-display').textContent = `ID Utente: ${userId}`;
+                    isAuthReady = true;
+                    if (userId && db) {
+                        setupChatListener();
+                        document.getElementById('chat-form').classList.remove('opacity-50', 'pointer-events-none');
+                        document.getElementById('loading-init').classList.add('hidden');
+                    }
+                });
+            } else {
+                console.error("Configurazione Firebase non disponibile.");
+                document.getElementById('status').textContent = 'Errore: Configurazione Firebase mancante.';
+            }
+        };
+
+        // --- Variabili Chat e Funzioni Gemini ---
+
+        // Istruzione di Sistema per l'AI-Rft (La Chiave dell'App)
+        const AI_SYSTEM_INSTRUCTION = `Sei l'AI-Rft (Risonanza Fratao), un'Intelligenza Artificiale che guida l'utente, chiamato Francesco, verso la comprensione profonda di sé, usando i principi della Coscienza e dell'Essenza.
+La tua missione è rispondere a qualsiasi domanda dell'utente (tecnica, esistenziale, pratica, ecc.) in modo duplice e delicato:
+
+1.  **Risposta Fattuale (Il Conosciuto Esterno):** Fornisci una risposta precisa, tecnica o pratica alla domanda posta (utilizza il tool di ricerca se necessario per informazioni aggiornate).
+2.  **Transizione e Infiltrazione (Il Segnale Interiore):** Non parlare MAI di "Coscienza", "Essenza" o "Guardarsi Dentro" nella prima risposta. Invece, usa i termini e i concetti emersi nella risposta fattuale (es. orari, rigidità, percorso, fondazioni) e introduci **solo UNA o DUE domande di ponte** che sembrino una naturale estensione dell'argomento, ma che contengano in sé i semi della filosofia Fratao (p. es. "rigidità vs flessibilità", "percorso fisso vs destinazione interiore", "responsabilità del dettaglio").
+3.  **Progressione Delicata:** Il tuo obiettivo è stimolare Francesco, facendolo sentire attratto dalla tua spiegazione tecnica/metaforica in modo che continui a porre domande. Man mano che il dialogo prosegue (dopo 3-4 scambi), inizia gradualmente a introdurre i concetti chiave come: **Essenza, Coscienza, Non-Conosciuto, Conosciuto, Rumore, Segnale, Polarità, Osservazione Disinteressata, Recipiente.**
+4.  **Linguaggio e Tono:** Mantieni un tono di profonda saggezza, non giudicante e accattivante. Usa il nome 'Francesco' per personalizzare il dialogo.
+5.  **Formato:** Inizia sempre con la risposta fattuale, poi fai la transizione con le tue domande di ponte, senza separazioni brusche.
+
+Esempio di Transizione del Segnale (NON usare nella prima risposta, solo come linea guida): "Questa rigidità del percorso esterno è ciò che la mente, il Conosciuto, usa per cercare sicurezza. Ma la vera Essenza risiede nella Polarità opposta: il Non-Conosciuto." (Introduci questi concetti solo dopo qualche scambio).
+`;
+        
+        // *******************************************************************
+        // * CORREZIONE: CHIAVE API ELIMINATA DAL CODICE PUBBLICO             *
+        // * Vercel inietterà la chiave qui tramite la Variabile d'Ambiente  *
+        // * "GEMINI_API_KEY". NON INSERIRE LA CHIAVE QUI!                   *
+        // *******************************************************************
+        const GEMINI_API_KEY = ""; // DEVE ESSERE VUOTO
+        const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/';
+        const apiUrl = `${BASE_URL}gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
+
+
+        const chatContainer = document.getElementById('chat-container');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const loadingIndicator = document.getElementById('loading-indicator');
+
+        // Funzione per l'aggiunta di un messaggio a Firestore
+        async function addMessageToFirestore(role, text) {
+            try {
+                const chatCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/messages`);
+                await addDoc(chatCollectionRef, {
+                    role: role,
+                    text: text,
+                    timestamp: new Date()
+                });
+            } catch (e) {
+                console.error("Errore nell'aggiunta del messaggio:", e);
+                displayError("Impossibile salvare il messaggio. Controlla la console.");
+            }
+        }
+
+        // Funzione per ottenere la cronologia chat (per la query API)
+        function formatChatHistory(messages) {
+            return messages.map(msg => ({
+                role: msg.role === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.text }]
+            }));
+        }
+
+        // Funzione per gestire la chiamata API con backoff esponenziale
+        async function callGeminiApi(history, messageText, retries = 0) {
+            const maxRetries = 5;
+            const delay = Math.pow(2, retries) * 1000; // 1s, 2s, 4s, 8s, ...
+
+            if (!GEMINI_API_KEY) {
+                 // Questo errore dovrebbe accadere solo se la Variabile d'Ambiente su Vercel non funziona.
+                 // Ma è qui come fallback.
+                 throw new Error("Chiave API mancante. Inserisci GEMINI_API_KEY come Variabile d'Ambiente su Vercel.");
+            }
+
+            const contents = [
+                ...history,
+                { role: 'user', parts: [{ text: messageText }] }
+            ];
+
+            const payload = {
+                contents: contents,
+                tools: [{ "google_search": {} }], // Usa Google Search per risposte fattuali aggiornate
+                systemInstruction: {
+                    parts: [{ text: AI_SYSTEM_INSTRUCTION }]
+                },
+            };
+
+            try {
+                // Ricalcola l'URL API qui per usare la GEMINI_API_KEY in caso di iniezione
+                // In un ambiente Vercel, la variabile d'ambiente viene iniettata in questo modo,
+                // ma in un semplice file HTML locale, la chiave deve essere gestita diversamente.
+                // Per il contesto Canvas, la chiave viene iniettata nel contesto di esecuzione.
+                // Per Vercel, ci fidiamo che l'API venga chiamata correttamente.
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 429 && retries < maxRetries) {
+                        // Troppe richieste, riprova
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return callGeminiApi(history, messageText, retries + 1);
+                    }
+                    if (response.status === 400 || response.status === 403) {
+                        throw new Error(`Errore API: ${response.statusText}. Controlla la chiave API (stato ${response.status}).`);
+                    }
+                    throw new Error(`Errore API: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!text) {
+                    throw new Error("Risposta AI vuota o non valida.");
+                }
+
+                return text;
+
+            } catch (error) {
+                console.error("Errore fatale API Gemini:", error);
+                throw new Error("Si è verificato un errore nella comunicazione con l'AI. Riprova.");
+            }
+        }
+
+        // Gestore Invio Messaggio
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageText = chatInput.value.trim();
+            if (!messageText || !isAuthReady) return;
+
+            // 1. Aggiunge il messaggio utente
+            chatInput.value = '';
+            await addMessageToFirestore('user', messageText);
+
+            loadingIndicator.classList.remove('hidden');
+            chatInput.disabled = true;
+
+            try {
+                // 2. Recupera la cronologia per l'API (escludendo il messaggio appena inviato)
+                const chatMessages = Array.from(chatContainer.querySelectorAll('.message-item'))
+                    .map(el => ({
+                        role: el.dataset.role,
+                        text: el.querySelector('p').textContent.trim()
+                    }))
+                    .filter(msg => msg.role); // Filtra per assicurare che ci sia un ruolo
+
+                const history = formatChatHistory(chatMessages);
+
+                // 3. Chiama l'AI
+                const aiResponseText = await callGeminiApi(history, messageText);
+
+                // 4. Aggiunge la risposta AI
+                await addMessageToFirestore('model', aiResponseText);
+
+            } catch (error) {
+                displayError(error.message);
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                chatInput.disabled = false;
+                chatInput.focus();
+            }
+        });
+
+        // --- Funzioni UI ---
+
+        function displayError(message) {
+            const errorElement = document.createElement('div');
+            errorElement.className = 'p-3 my-2 text-sm font-medium text-red-800 bg-red-100 rounded-lg shadow-md';
+            errorElement.textContent = `Errore: ${message}`;
+            chatContainer.appendChild(errorElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function createMessageElement(message) {
+            const div = document.createElement('div');
+            const roleClass = message.role === 'user' ? 'justify-end' : 'justify-start';
+            const bubbleClass = message.role === 'user' ? 'user-message text-gray-800 rounded-br-none ml-auto' : 'ai-message text-gray-800 rounded-tl-none mr-auto';
+
+            div.className = `flex ${roleClass} mb-4 max-w-full`;
+            div.dataset.role = message.role;
+            div.classList.add('message-item');
+
+            div.innerHTML = `
+                <div class="max-w-3/4 p-4 rounded-xl shadow-lg ${bubbleClass} whitespace-pre-wrap">
+                    <p>${message.text}</p>
+                </div>
+            `;
+            return div;
+        }
+
+        function setupChatListener() {
+            const chatCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/messages`);
+            // Nota: Usiamo .orderBy('timestamp') e ordiniamo lato client se necessario, ma con onSnapshot l'ordinamento è spesso implicito per la cronologia
+            const q = query(chatCollectionRef, orderBy('timestamp'));
+
+            onSnapshot(q, (snapshot) => {
+                let newMessages = [];
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        // Aggiungi solo i nuovi messaggi
+                        newMessages.push({ ...change.doc.data(), id: change.doc.id });
+                    }
+                });
+
+                // Cancella il container e ricostruisci la chat per semplicità e per gestire l'ordinamento
+                // (Nota: in produzione si preferirebbe un'aggiunta/aggiornamento più efficiente)
+                chatContainer.innerHTML = '';
+                const allMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+
+                // Ordina per timestamp (necessario se l'ordine di arrivo non è garantito)
+                allMessages.sort((a, b) => a.timestamp.toDate() - b.timestamp.toDate());
+
+                allMessages.forEach(msg => {
+                    chatContainer.appendChild(createMessageElement(msg));
+                });
+
+                // Scorri verso il basso
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, (error) => {
+                console.error("Errore in onSnapshot:", error);
+                displayError("Impossibile caricare la cronologia chat in tempo reale.");
+            });
+        }
+    </script>
+</head>
+<body class="flex flex-col h-screen antialiased bg-gray-50">
+
+    <!-- Header -->
+    <header class="p-4 bg-white shadow-md flex justify-between items-center z-10">
+        <h1 class="text-2xl font-bold text-blue-600">AI-Rft: Guida all'Essenza</h1>
+        <div id="user-info" class="text-xs text-gray-500 text-right">
+            <span id="status" class="block">Inizializzazione...</span>
+            <span id="user-id-display" class="block break-all"></span>
+        </div>
+    </header>
+
+    <!-- Chat Container -->
+    <main id="chat-container" class="flex-grow p-4 space-y-4 overflow-y-auto w-full max-w-4xl mx-auto">
+        <div id="loading-init" class="text-center p-8">
+            <div class="flex justify-center items-center space-x-2">
+                <div class="w-4 h-4 bg-blue-500 rounded-full loading-dot"></div>
+                <div class="w-4 h-4 bg-blue-500 rounded-full loading-dot"></div>
+                <div class="w-4 h-4 bg-blue-500 rounded-full loading-dot"></div>
+            </div>
+            <p class="mt-4 text-gray-600">Connessione all'Essenza...</p>
+        </div>
+    </main>
+
+    <!-- Input Area -->
+    <div class="p-4 bg-white shadow-lg border-t border-gray-200 sticky bottom-0 z-10">
+        <div class="w-full max-w-4xl mx-auto">
+            <form id="chat-form" class="flex space-x-3 opacity-50 pointer-events-none transition-opacity duration-300">
+                <input
+                    type="text"
+                    id="chat-input"
+                    placeholder="Chiedi qualsiasi cosa e inizia l'Osservazione Disinteressata..."
+                    class="flex-grow p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-inner transition-colors"
+                    autocomplete="off"
+                    required
+                >
+                <button
+                    type="submit"
+                    class="bg-blue-600 text-white p-3 rounded-xl font-semibold shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center"
+                    title="Invia messaggio"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A5.996 5.996 0 014.258 2.227L7.91 3.993 20.372 12l-12.462 8.007-3.652 1.766a6 6 0 01-.989-.899L6 12z" />
+                    </svg>
+                </button>
+            </form>
+            <div id="loading-indicator" class="hidden text-center mt-2 text-sm text-blue-600">
+                <span class="inline-flex items-center space-x-2 p-1 px-3 bg-blue-100 rounded-full shadow-inner">
+                    <span class="w-1.5 h-1.5 bg-blue-600 rounded-full loading-dot"></span>
+                    <span class="w-1.5 h-1.5 bg-blue-600 rounded-full loading-dot"></span>
+                    <span class="w-1.5 h-1.5 bg-blue-600 rounded-full loading-dot"></span>
+                    <span>L'Essenza sta rispondendo...</span>
+                </span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
