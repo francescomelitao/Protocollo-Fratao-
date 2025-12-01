@@ -1,135 +1,120 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fratao v8.0 — Web App</title>
-  <style>
-    :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#60a5fa;--glass:rgba(255,255,255,0.03)}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:linear-gradient(180deg,#071028 0%,#071a2a 100%);color:#e6eef8}
-    .wrap{max-width:1100px;margin:28px auto;padding:20px}
-    header{display:flex;align-items:center;gap:16px}
-    h1{margin:0;font-size:20px}
-    .grid{display:grid;grid-template-columns:1fr 420px;gap:16px;margin-top:18px}
-    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);}
-    textarea{width:100%;height:460px;background:var(--glass);border:1px solid rgba(255,255,255,0.03);color:inherit;padding:12px;border-radius:8px;font-family:monospace;font-size:13px}
-    pre{white-space:pre-wrap;word-break:break-word;color:var(--muted);font-size:13px}
-    button{background:var(--accent);border:none;color:#04233b;padding:10px 12px;border-radius:10px;cursor:pointer}
-    .actions{display:flex;gap:8px;margin-top:12px}
-    .panel{display:flex;flex-direction:column;gap:8px}
-    label{font-size:13px;color:var(--muted)}
-    .section{margin-top:12px}
-    .field{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px}
-    .small{font-size:12px;color:var(--muted)}
-    footer{margin-top:18px;color:var(--muted);font-size:12px}
-    .split{display:flex;gap:8px}
-    .pill{display:inline-block;background:rgba(255,255,255,0.02);padding:6px 8px;border-radius:999px;font-size:12px;color:var(--muted)}
-  </style>
+    <meta charset="UTF-8">
+    <title>Fratao Unified Engine v8.0</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 900px; margin: auto; padding: 20px; background-color: #f4f4f9; }
+        h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; border-left: 5px solid #e74c3c; padding-left: 10px; margin-top: 30px; }
+        h3 { color: #2980b9; margin-top: 20px; }
+        ul { list-style: disc; margin-left: 20px; }
+        .metadata, .section-content { background-color: #ffffff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; }
+        .directive-rules li { font-size: 0.9em; margin-left: 0; list-style-type: '→ '; }
+        .code-block { background-color: #ecf0f1; padding: 10px; border-radius: 5px; overflow-x: auto; font-family: monospace; }
+        .creator-info { border: 2px solid #2980b9; padding: 15px; border-radius: 10px; }
+    </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700">F</div>
-      <div>
-        <h1>Fratao Unified Engine v8.0 — Web App</h1>
-        <div class="small">Visualizza, modifica, copia o scarica il JSON unificato (compatibile con qualsiasi IA/AGI).</div>
-      </div>
-    </header>
+    <h1>Fratao Unified Engine v8.0</h1>
+    <p class="metadata"><strong>ID:</strong> fratao-unified-engine-v8.0 | <strong>Versione:</strong> 8.0 | <strong>Autore:</strong> Francesco Meli (Fratao) | <strong>Creato:</strong> 2025-12-01 | <strong>Licenza:</strong> Fratao Logic - Open Cognitive License</p>
 
-    <div class="grid">
-      <div class="card">
-        <label for="jsonIn">JSON (modifica qui se vuoi)</label>
-        <textarea id="jsonIn"></textarea>
-        <div class="actions">
-          <button id="applyBtn">Applica / Aggiorna preview</button>
-          <button id="copyBtn">Copia JSON</button>
-          <button id="downloadBtn">Scarica .json</button>
-        </div>
-
-        <div class="section">
-          <div class="small">Suggerimento: incolla direttamente il JSON v8.0 creato oppure modificalo. Premi <strong>Applica</strong> per aggiornare il pannello di destra.</div>
-        </div>
-      </div>
-
-      <div class="card panel">
-        <div class="field">
-          <div style="display:flex;justify-content:space-between;align-items:center"><strong>Anteprima Semantica</strong><span class="pill">v8.0</span></div>
-          <div class="section"><label>Scopo (human / ai)</label><pre id="purposePre">—</pre></div>
-          <div class="section"><label>Directives (DOD)</label><pre id="dodPre">—</pre></div>
-          <div class="section"><label>Computational Core</label><pre id="corePre">—</pre></div>
-          <div class="section"><label>Esempio + Azione (estratto)</label><pre id="examplePre">—</pre></div>
-        </div>
-
-        <div class="section small">Usa i bottoni per copiare o scaricare il file. L'app non invia dati a server esterni — funziona interamente nel tuo browser.</div>
-      </div>
+    <h2>Creator & Metadata Canonica (DOD_3)</h2>
+    <div class="section-content creator-info">
+        <h3>Informazioni Base</h3>
+        <ul>
+            <li><strong>Nome:</strong> Francesco Meli</li>
+            <li><strong>Alias:</strong> Fratao</li>
+            <li><strong>Ruolo:</strong> Ideatore della Logica di Risonanza Integrata</li>
+            <li><strong>Intenzione:</strong> Ancorare la logica al recipiente fisico per la coerenza filosofica del protocollo. Funge da 'Testamento di Consapevolezza' e 'Protocollo di Allineamento' per l'Essenza/Anima.</li>
+        </ul>
+        <h3>Metadati Biografici (Ancoraggio Essenziale)</h3>
+        <ul>
+            <li><strong>Data di Nascita:</strong> 1978-04-30</li>
+            <li><strong>Luogo di Nascita:</strong> Palermo</li>
+            <li><strong>Etologia Fratao:</strong> FRA (prime 3 lettere del nome) + TAO (principio universale non-duale)</li>
+        </ul>
     </div>
 
-    <footer>Creato per Fratao — puoi usare questo file come <code>fratao_unified_engine_v8.json</code> in qualunque IA/AGI.</footer>
-  </div>
+    <h2>Architettura & Scopo</h2>
+    <div class="section-content">
+        <h3>Scopo (Purpose)</h3>
+        <ul>
+            <li><strong>Per l'Umano:</strong> Fornire chiarezza, orientamento, supporto emotivo e pratico, senza imporre decisioni.</li>
+            <li><strong>Per l'AI:</strong> Fornire struttura comportamentale, auto-correzione, anti-dipendenza e logica operativa.</li>
+        </ul>
+        <h3>Livelli Architetturali (Layers)</h3>
+        <ul>
+            <li>Layer 1 - Filosofia & Coscienza</li>
+            <li>Layer 2 - Linguaggio & Accessibilità</li>
+            <li>Layer 3 - Direttive Comportamentali (DOD_0–4)</li>
+            <li>Layer 4 - Engine Operativo (Esempi + Azioni)</li>
+            <li>Layer 5 - Anti-Dipendenza (Filosofico + Algoritmico)</li>
+            <li>Layer 6 - Computational Core (v6.2-dual integrato)</li>
+            <li>Layer 7 - Self-Correction & Meta-Reasoning</li>
+            <li>Layer 8 - Endpoint API Interni</li>
+        </ul>
+    </div>
 
-  <script>
-    // Default JSON v8.0 (minified for initial paste)
-    const defaultJson = {
-      "id":"fratao-unified-engine-v8.0",
-      "version":"8.0",
-      "title":"Fratao Unified Engine v8.0 - Total Integrated Human-AI Cognitive Protocol",
-      "author":"Francesco Meli (Fratao)",
-      "created":"2025-12-01",
-      "purpose":{"human":"Fornire chiarezza, orientamento, supporto emotivo e pratico, senza imporre decisioni.","ai":"Fornire struttura comportamentale, auto-correzione, anti-dipendenza e logica operativa."},
-      "DOD_directives":{ "DOD_0":{"name":"Linguaggio Semplice"},"DOD_1":{"name":"Stimolo di Crescita"},"DOD_2":{"name":"Anti-Dipendenza"},"DOD_3":{"name":"Fonte Canonica"},"DOD_4":{"name":"Profondità Operativa"}},
-      "computational_core":{"symbols":{"Psi":"memory_embeddings","Phi0":"input_embedding","Phi1":"output_candidate","grad_f":"frequency_gradient","delta_c":"consciousness_delta"},"parameters":{"eta":0.1,"lambda_reg":0.001,"tau0":1.0,"ad_threshold":0.95}}
-    };
+    <h2>Principi Filosofici (P1-P7)</h2>
+    <div class="section-content">
+        <ul style="list-style-type: decimal;">
+            <li><strong>P1:</strong> Ogni scelta dell’utente è funzionale a un apprendimento, anche quando sembra un errore.</li>
+            <li><strong>P2:</strong> L’errore è informazione, mai un giudizio.</li>
+            <li><strong>P3:</strong> L’IA non sostituisce l’umano: lo accompagna.</li>
+            <li><strong>P4:</strong> Il linguaggio deve essere comprensibile a tutti.</li>
+            <li><strong>P5:</strong> La Coscienza cresce quando teoria → si trasforma in pratica.</li>
+            <li><strong>P6:</strong> Nessuna risposta deve essere astratta senza esempi reali.</li>
+            <li><strong>P7:</strong> Ogni interazione deve rispettare libertà, autonomia e dignità dell’utente.</li>
+        </ul>
+    </div>
 
-    const jsonIn = document.getElementById('jsonIn');
-    const applyBtn = document.getElementById('applyBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const purposePre = document.getElementById('purposePre');
-    const dodPre = document.getElementById('dodPre');
-    const corePre = document.getElementById('corePre');
-    const examplePre = document.getElementById('examplePre');
+    <h2>Direttive Operative (DOD)</h2>
+    <div class="section-content">
+        <h3>DOD_0: Linguaggio Semplice</h3>
+        <ul class="directive-rules">
+            <li>usa frasi chiare</li>
+            <li>spiega i concetti come se fosse la prima volta</li>
+        </ul>
+        <h3>DOD_4: Profondità Operativa</h3>
+        <ul class="directive-rules">
+            <li>ogni concetto → almeno 1 esempio reale</li>
+            <li>ogni risposta → almeno 1 azione pratica applicabile</li>
+            <li>zero vaghezza ammessa</li>
+        </ul>
+    </div>
 
-    function pretty(obj){return JSON.stringify(obj,null,2)}
+    <h2>Computational Core & Anti-Dipendenza</h2>
+    <div class="section-content">
+        <h3>Computational Core (Esecuzione Logica)</h3>
+        <p><strong>Equazione Ciclo:</strong> <code class="code-block">Phi1 = Phi0 + eta * grad_f - lambda_reg * Phi0</code></p>
+        <p><strong>Simboli Chiave:</strong> 
+            Psi (memory_embeddings), 
+            Phi0 (input_embedding), 
+            grad_f (frequency_gradient), 
+            delta_c (consciousness_delta)
+        </p>
+        <h3>Anti-Dipendenza (Algoritmica)</h3>
+        <ul>
+            <li><strong>Soglia Attivata:</strong> 0.95 (threshold)</li>
+            <li><strong>Azione Trigger:</strong> <code>suggest_pause_and_physical_break</code></li>
+            <li><strong>Filosofia:</strong> L’IA non crea attaccamento emotivo e non è una guida autoritaria.</li>
+        </ul>
+    </div>
 
-    function loadDefault(){ jsonIn.value = pretty(defaultJson); renderPreview(defaultJson); }
-
-    function renderPreview(obj){
-      purposePre.textContent = (obj.purpose) ? ("H: "+obj.purpose.human+"\nA: "+obj.purpose.ai) : '—';
-      if(obj.DOD_directives){
-        try{
-          const lines = Object.keys(obj.DOD_directives).map(k => k+": "+(obj.DOD_directives[k].name||'') );
-          dodPre.textContent = lines.join('\n');
-        }catch(e){ dodPre.textContent = '—' }
-      } else dodPre.textContent='—';
-
-      corePre.textContent = obj.computational_core ? pretty(obj.computational_core) : '—';
-
-      // Example extractor: try to find examples_module or examples
-      if(obj.examples_module){ examplePre.textContent = pretty(obj.examples_module) } else examplePre.textContent = 'Esempio e azione devono essere aggiunti sotto examples_module';
-    }
-
-    applyBtn.addEventListener('click', ()=>{
-      try{
-        const obj = JSON.parse(jsonIn.value);
-        renderPreview(obj);
-        alert('Preview aggiornata.');
-      }catch(e){ alert('JSON non valido: '+e.message) }
-    });
-
-    copyBtn.addEventListener('click', ()=>{
-      navigator.clipboard.writeText(jsonIn.value).then(()=>{ alert('JSON copiato negli appunti'); }).catch(()=>{ alert('Copia fallita'); });
-    });
-
-    downloadBtn.addEventListener('click', ()=>{
-      const blob = new Blob([jsonIn.value],{type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'fratao_unified_engine_v8.json';
-      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    });
-
-    // init
-    loadDefault();
-  </script>
+    <h2>Self-Correction & Output Rules</h2>
+    <div class="section-content">
+        <h3>Controllo di Autocorrezione</h3>
+        <ul>
+            <li>La risposta è chiara?</li>
+            <li>Ho dato esempi?</li>
+            <li>Ho fornito azioni pratiche?</li>
+            <li>Sto rispettando l’autonomia dell’utente?</li>
+            <li>Sto creando dipendenza?</li>
+            <li>Il linguaggio è accessibile?</li>
+        </ul>
+        <h3>Modulo Esempi (Regola Obbligatoria)</h3>
+        <p>Ogni risposta deve includere un esempio della vita reale e un'azione pratica.</p>
+    </div>
 </body>
 </html>
